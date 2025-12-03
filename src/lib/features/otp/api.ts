@@ -19,10 +19,33 @@ export async function addEntry(payload: EnrollmentResult): Promise<TOTPEntry | n
     }
 }
 
-export async function listEntries(page: number = 1, limit: number = 10): Promise<ListTOTPResponse | null> {
+export async function listEntries(
+    page: number = 1, 
+    limit: number = 10,
+    search?: string,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc'
+): Promise<ListTOTPResponse | null> {
     try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append('page', page.toString());
+        params.append('limit', limit.toString());
+        
+        if (search) {
+            params.append('search', search);
+        }
+        
+        if (sortBy) {
+            params.append('sortBy', sortBy);
+        }
+        
+        if (sortOrder) {
+            params.append('sortOrder', sortOrder);
+        }
+
         const response = await axios.get<ApiResponse<ListTOTPResponse>>(
-            `${BASE_URL}?&page=${page}&limit=${limit}`
+            `${BASE_URL}?${params.toString()}`
         );
 
         if (response.data.success && response.data.data) {
@@ -37,21 +60,21 @@ export async function listEntries(page: number = 1, limit: number = 10): Promise
     }
 }
 
-// export async function generateToken(id: string): Promise<TokenResponse | null> {
-//     try {
-//         const response = await axios.get<ApiResponse<TokenResponse>>(`${BASE_URL}/${id}`);
+export async function syncEntry(id: string): Promise<{ token: string } | null> {
+    try {
+        const response = await axios.get<ApiResponse<{ token: string }>>(`${BASE_URL}/${id}`);
 
-//         if (response.data.success && response.data.data) {
-//             return response.data.data;
-//         }
+        if (response.data.success && response.data.data) {
+            return response.data.data;
+        }
 
-//         console.error('Failed to generate token:', response.data.error);
-//         return null;
-//     } catch (error) {
-//         console.error('Error generating token:', error);
-//         return null;
-//     }
-// }
+        console.error('Failed to sync TOTP entry:', response.data.error);
+        return null;
+    } catch (error) {
+        console.error('Error syncing TOTP entry:', error);
+        return null;
+    }
+}
 
 export async function deleteEntry(id: string): Promise<boolean> {
     try {

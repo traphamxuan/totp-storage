@@ -3,6 +3,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { generate_token } from '@totp-store/totp-rs-bundler'
 
+// Add CORS headers
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'GET, OPTIONS',
+	'Access-Control-Allow-Headers': 'Content-Type'
+};
+
 export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const { id } = params;
@@ -11,7 +18,10 @@ export const GET: RequestHandler = async ({ params }) => {
 			return json({
 				success: false,
 				error: 'Missing TOTP entry ID'
-			}, { status: 400 });
+			}, {
+				status: 400,
+				headers: corsHeaders
+			});
 		}
 
 		const entry = totpService.getTOTPEntry(id);
@@ -20,7 +30,10 @@ export const GET: RequestHandler = async ({ params }) => {
 			return json({
 				success: false,
 				error: 'TOTP entry not found'
-			}, { status: 404 });
+			}, {
+				status: 404,
+				headers: corsHeaders
+			});
 		}
 
 		const token = generate_token(entry.secret);
@@ -31,13 +44,18 @@ export const GET: RequestHandler = async ({ params }) => {
 				id: entry.id,
 				token: token
 			}
+		}, {
+			headers: corsHeaders
 		});
 	} catch (error) {
 		console.error('Error generating TOTP token:', error);
 		return json({
 			success: false,
 			error: 'Failed to generate TOTP token'
-		}, { status: 500 });
+		}, {
+			status: 500,
+			headers: corsHeaders
+		});
 	}
 };
 
@@ -49,7 +67,10 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			return json({
 				success: false,
 				error: 'Missing TOTP entry ID'
-			}, { status: 400 });
+			}, {
+				status: 400,
+				headers: corsHeaders
+			});
 		}
 
 		const result = totpService.deleteTOTPEntry(id);
@@ -58,17 +79,32 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			return json({
 				success: true,
 				message: 'TOTP entry deleted successfully'
+			}, {
+				headers: corsHeaders
 			});
 		} else {
 			return json({
 				success: false,
 				error: 'TOTP entry not found'
-			}, { status: 404 });
+			}, {
+				status: 404,
+				headers: corsHeaders
+			});
 		}
 	} catch (error) {
 		return json({
 			success: false,
 			error: 'Failed to delete TOTP entry'
-		}, { status: 500 });
+		}, {
+			status: 500,
+			headers: corsHeaders
+		});
 	}
+};
+
+// Handle preflight requests
+export const OPTIONS: RequestHandler = async () => {
+	return new Response(null, {
+		headers: corsHeaders
+	});
 };

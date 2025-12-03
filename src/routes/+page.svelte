@@ -10,23 +10,22 @@
 
 	async function onEntryAdded(entry: TOTPEntry) {
 		entries = [entry, ...entries];
+		total = total + 1; // Increment total when adding an entry
 	}
 
-	async function loadEntries(page: number = 1, limit: number = 10) {
+	async function loadEntries(
+		page: number = 1,
+		limit: number = 10,
+		search?: string,
+		sortBy?: string,
+		sortOrder?: 'asc' | 'desc'
+	) {
 		try {
 			// Fetch entries with secrets for offline use
-			const result = await listEntries(page, limit);
+			const result = await listEntries(page, limit, search, sortBy, sortOrder);
 			if (result) {
 				// If this is the first page, replace entries, otherwise append
-				if (page === 1) {
-					entries = result.entries;
-				} else {
-					// Filter out any entries that already exist to prevent duplicates
-					const newEntries = result.entries.filter(newEntry => 
-						!entries.some(existingEntry => existingEntry.id === newEntry.id)
-					);
-					entries = [...entries, ...newEntries];
-				}
+				entries = result.entries;
 				total = result.total;
 			}
 		} catch (error) {
@@ -36,6 +35,7 @@
 
 	async function handleDelete(id: string) {
 		entries = entries.filter((entry) => entry.id !== id);
+		total = total - 1; // Decrement total when removing an entry
 	}
 
 	onMount(async () => {
@@ -50,10 +50,5 @@
 	<!-- Add New TOTP Form -->
 	<OtpForm {onEntryAdded} />
 
-	<OtpList
-		bind:entries
-		{total}
-		onLoad={loadEntries} 
-		onDelete={handleDelete}
-	/>
+	<OtpList bind:entries {total} onLoad={loadEntries} onDelete={handleDelete} />
 </div>

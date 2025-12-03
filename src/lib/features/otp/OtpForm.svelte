@@ -61,7 +61,8 @@
 	async function submitOTPEntry() {
 		submitting = true;
 		try {
-			const entry = await addEntry(enrollment);
+			const enroll = await enrollTOTP({ ...enrollment });
+			const entry = await addEntry(enroll);
 			if (entry) {
 				await onEntryAdded(entry);
 				enrollment.secret = '';
