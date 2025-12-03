@@ -1,11 +1,10 @@
-mod utils;
-
 use base64::{engine::general_purpose, Engine as _};
 use hmac::{Hmac, Mac};
 use image::codecs::png::PngEncoder;
 use image::ColorType;
 use image::ImageEncoder;
 use qrcode::QrCode;
+use rqrr::PreparedImage;
 use sha1::Sha1;
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
@@ -106,4 +105,47 @@ pub fn generate_totp_uri(secret: &str, label: &str, issuer: &str) -> String {
         secret,
         urlencoding::encode(issuer)
     )
+}
+
+/// Decode a QR code from base64-encoded image data
+#[wasm_bindgen]
+pub fn decode_qr_code_base64(image_data: &str) -> Result<String, JsError> {
+    // Remove data URL prefix if present
+    let image_data = if image_data.starts_with("data:image/") {
+        let parts: Vec<&str> = image_data.split(',').collect();
+        if parts.len() != 2 {
+            return Err(JsError::new("Invalid image data URL"));
+        }
+        parts[1]
+    } else {
+        image_data
+    };
+
+    // Decode base64 image data
+    let image_bytes = general_purpose::STANDARD
+        .decode(image_data)
+        .map_err(|_| JsError::new("Failed to decode base64 image data"))?;
+
+    // Load image
+    let img = image::load_from_memory(&image_bytes)
+        .map_err(|_| JsError::new("Failed to load image from data"))?;
+
+    // Convert to grayscale
+    let gray_img = img.to_luma8();
+
+    // Prepare image for QR detection
+    let mut prepared = PreparedImage::prepare(gray_img);
+
+    // Search for QR codes
+    let grids = prepared.detect_grids();
+
+    // Return the first detected QR code content
+    if let Some(grid) = grids.first() {
+        let (_meta, content) = grid
+            .decode()
+            .map_err(|_| JsError::new("Failed to decode QR code"))?;
+        Ok(content)
+    } else {
+        Err(JsError::new("No QR code found in image"))
+    }
 }

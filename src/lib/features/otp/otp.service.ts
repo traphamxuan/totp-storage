@@ -1,7 +1,11 @@
-import { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64 } from '@totp-store/totp-rs-web';
+import { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64, decode_qr_code_base64 } from '@totp-store/totp-rs-web';
 
 function generateId(): string {
     return Math.random().toString(36).substring(2, 15);
+}
+
+export function generateSecret(): string {
+    return generate_secret();
 }
 
 export async function enrollTOTP(options?: EnrollmentOptions): Promise<EnrollmentResult> {
@@ -43,5 +47,13 @@ export function generateToken(secret: string): TokenGenerationResult {
 
 export function getTimeRemaining(): number {
     return 30 - (Math.floor(Date.now() / 1000) % 30);
+}
+
+export function decodeQRCodeFromBase64(imageData: string): string {
+    try {
+        return decode_qr_code_base64(imageData);
+    } catch (error) {
+        throw new Error(`Failed to decode QR code: ${error}`);
+    }
 }
 

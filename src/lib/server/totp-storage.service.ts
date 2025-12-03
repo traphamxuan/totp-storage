@@ -1,4 +1,4 @@
-
+import { generate_token } from '@totp-store/totp-rs-bundler'
 export interface TOTPEntry {
     id: string;
     secret: string;
@@ -51,6 +51,17 @@ export class TotpService {
 
     getSize(): number {
         return this.totpKeys.size;
+    }
+
+    generateToken(secret: string): { token: string; expiresIn: number; generatedAt: Date } {
+        const token = generate_token(secret);
+        const expiresIn = 30 - (Math.floor(Date.now() / 1000) % 30); // TOTP tokens expire every 30 seconds
+
+        return {
+            token,
+            expiresIn,
+            generatedAt: new Date()
+        };
     }
 }
 
