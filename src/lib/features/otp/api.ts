@@ -96,3 +96,20 @@ export async function deleteEntry(id: string): Promise<boolean> {
         return false;
     }
 }
+
+// Add function to update used_at field for entries
+export async function updateUsedAt(ids: string[]): Promise<boolean> {
+    try {
+        const response = await axios.patch<ApiResponse<null>>(BASE_URL, { ids });
+
+        if (response.data.success) {
+            return true;
+        }
+
+        console.error('Failed to update used_at field:', response.data.error);
+        return false;
+    } catch (error) {
+        console.error('Error updating used_at field:', error);
+        return false;
+    }
+}

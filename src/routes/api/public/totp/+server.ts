@@ -99,3 +99,39 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}, { status: 500 });
 	}
 };
+
+// Add PATCH endpoint to update used_at field
+export const PATCH: RequestHandler = async ({ request }) => {
+	try {
+		const { ids } = await request.json();
+
+		// Validate input
+		if (!ids || !Array.isArray(ids) || ids.length === 0) {
+			return json({
+				success: false,
+				error: 'Missing or invalid IDs array'
+			}, { status: 400 });
+		}
+
+		// Update used_at field for the specified entries
+		const result = await totpService.updateUsedAt(ids);
+
+		if (result) {
+			return json({
+				success: true,
+				message: `Successfully updated used_at field for ${ids.length} entries`
+			});
+		} else {
+			return json({
+				success: false,
+				error: 'Failed to update used_at field'
+			}, { status: 500 });
+		}
+	} catch (error) {
+		console.error('Error updating used_at field:', error);
+		return json({
+			success: false,
+			error: 'Failed to update used_at field'
+		}, { status: 500 });
+	}
+};

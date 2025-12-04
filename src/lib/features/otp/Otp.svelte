@@ -1,6 +1,47 @@
+<script module lang="ts">
+	let debounceTimer: ReturnType<typeof setTimeout> = 0;
+	let copiedEntries = new Set<string>();
+
+	export function trackCopiedEntry(id: string) {
+		copiedEntries.add(id);
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+			debounceTimer = undefined;
+		}
+		debounceTimer = setTimeout(() => {
+			submitCopiedEntries();
+		}, 10000); // 10 seconds
+	}
+
+
+	// Submit copied entries to backend
+	async function submitCopiedEntries() {
+		if (copiedEntries.size === 0) return;
+		
+		try {
+			// Convert Set to array for submission
+			const entriesArray = Array.from(copiedEntries);
+			
+			// Call the API to update the used_at field
+			const success = await updateUsedAt(entriesArray);
+			
+			if (success) {
+				console.log('Successfully updated used_at field for entries:', entriesArray);
+			} else {
+				console.error('Failed to update used_at field for entries:', entriesArray);
+			}
+			
+			// Clear the set after submission
+			copiedEntries.clear();
+		} catch (error) {
+			console.error('Failed to submit copied entries:', error);
+		}
+	}
+</script>
+
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { deleteEntry as deleteEntryApi, syncEntry as syncEntryApi } from './api';
+	import { deleteEntry as deleteEntryApi, syncEntry as syncEntryApi, updateUsedAt } from './api';
 	import { generateToken } from './otp.service';
 
 	const {
@@ -13,8 +54,8 @@
 
 	let token = $state('');
 	let expiresIn = $state(30);
-	let timer: unknown = 0;
-	let tokenTimer: unknown = 0;
+	let timer: ReturnType<typeof setInterval> = 0;
+	let tokenTimer: ReturnType<typeof setInterval> = 0;
 	let showMenu = $state(false);
 
 	onMount(() => {
@@ -26,8 +67,9 @@
 
 	onDestroy(() => {
 		// Clear timers
-		if (timer) clearInterval(timer as number);
-		if (tokenTimer) clearInterval(tokenTimer as number);
+		if (timer) clearInterval(timer);
+		if (tokenTimer) clearInterval(tokenTimer);
+		if (debounceTimer) clearTimeout(debounceTimer);
 	});
 
 	function startTimers() {
@@ -68,7 +110,7 @@
 		if (!token) return;
 		try {
 			await navigator.clipboard.writeText(token);
-			// Could add visual feedback here that token was copied
+			trackCopiedEntry(entry.id);
 		} catch (error) {
 			console.error('Failed to copy token:', error);
 		}

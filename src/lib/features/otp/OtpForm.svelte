@@ -62,8 +62,8 @@
 		return createTOTPEntry();
 	}
 
-	async function submitOTPEntry() {
-		// Verify Turnstile token before submission
+	async function submitOTPEntry(event: SubmitEvent) {
+		event.preventDefault();
 		if (!turnstileToken) {
 			alert('Please complete the security verification');
 			return;

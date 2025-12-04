@@ -48,28 +48,32 @@ export class TotpService {
         } satisfies TOTPEntry;
     }
 
-    async getTOTPEntry(id: string): Promise<TOTPEntry> {
-        const result = await this.totpRepo.getOne(id);
-
-        return {
-            id: result.id,
-            secret: result.secret,
-            issuer: result.metadata?.issuer || 'TOTP Store',
-            label: result.metadata?.label || `Account ${result.id}`,
-            type: result.metadata?.type || 'public',
-            challengeKey: result.metadata?.challengeKey,
-            createdAt: result.created_at || ''
-        };
+    async getTOTPEntry(id: string): Promise<TOTPEntry | null> {
+        try {
+            const result = await this.totpRepo.getOne(id);
+            return {
+                id: result.id,
+                secret: result.secret,
+                issuer: result.metadata?.issuer || 'TOTP Store',
+                label: result.metadata?.label || `Account ${result.id}`,
+                type: result.metadata?.type || 'public',
+                challengeKey: result.metadata?.challengeKey,
+                createdAt: result.created_at || ''
+            };
+        } catch (error) {
+            console.error('Error getting TOTP entry:', error);
+            return null;
+        }
     }
 
     async listTOTPEntries(
         page: number = 1,
-        limit: number = 100,
+        limit: number = 10,
         options?: ListOptions
     ): Promise<{ entries: TOTPEntry[]; total: number }> {
         // Note: Filtering and sorting by issuer/label would require storing these in the database
         // For now, we'll just implement pagination
-        const result = await this.totpRepo.getMany(page, limit);
+        const result = await this.totpRepo.getMany(page, limit, options);
 
         const entries: TOTPEntry[] = result.data.map(item => ({
             id: item.id,
@@ -86,8 +90,8 @@ export class TotpService {
         return await this.totpRepo.delete(id);
     }
 
-    async getSize(): Promise<number> {
-        return await this.totpRepo.count();
+    async getSize(search?: string): Promise<number> {
+        return await this.totpRepo.count({ search });
     }
 
     generateToken(secret: string): { token: string; expiresIn: number; generatedAt: Date } {
@@ -99,6 +103,16 @@ export class TotpService {
             expiresIn,
             generatedAt: new Date()
         };
+    }
+
+    // Add method to update the used_at field for entries
+    async updateUsedAt(ids: string[]): Promise<boolean> {
+        try {
+            return await this.totpRepo.updateUsedAt(ids);
+        } catch (error) {
+            console.error('Error updating used_at field:', error);
+            return false;
+        }
     }
 }
 

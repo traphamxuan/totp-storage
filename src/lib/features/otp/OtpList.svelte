@@ -28,6 +28,9 @@
 	let contents = $derived(entries.slice(0, limit) || []);
 	let searchQuery = $state('');
 
+	// Debounce timer
+	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 	// Sorting state
 	let sortColumn = $state<'issuer' | 'label' | 'created'>('created');
 	let sortDirection = $state<'asc' | 'desc'>('desc');
@@ -65,8 +68,16 @@
 
 	// Handle search input changes
 	function handleSearch() {
-		// Reset to first page when search changes
-		load(1);
+		// Clear existing timeout
+		if (searchDebounceTimer) {
+			clearTimeout(searchDebounceTimer);
+		}
+		
+		// Set new timeout
+		searchDebounceTimer = setTimeout(() => {
+			// Reset to first page when search changes
+			load(1);
+		}, 500);
 	}
 
 	// Get sort indicator for column header

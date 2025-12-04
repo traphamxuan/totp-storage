@@ -67,7 +67,7 @@
 				class="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-300 text-sm"
 				title="Install Chrome Extension"
 			>
-				Install Extension
+				Login
 			</button>
 		{/if}
 	</div>
