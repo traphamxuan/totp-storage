@@ -6,8 +6,7 @@
 	let {
 		entries = $bindable(),
 		total = 0,
-		onLoad,
-		onDelete = (id: string) => {}
+		onLoad
 	}: {
 		entries: Totp[];
 		total: number;
@@ -18,7 +17,6 @@
 			sortBy?: string,
 			sortOrder?: 'asc' | 'desc'
 		) => Promise<void>;
-		onDelete: (id: string) => void;
 	} = $props();
 
 	let currentPage = $state(1);
@@ -151,7 +149,7 @@
 								{new Date(entry.createdAt).toLocaleDateString()}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-								<Otp {entry} {onDelete} />
+								<Otp {entry} />
 							</td>
 						</tr>
 					{/each}

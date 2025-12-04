@@ -1,7 +1,6 @@
 import { totpService } from '$lib/server';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
-import { generate_token } from '$lib/server';
 
 // Add CORS headers
 const corsHeaders = {
@@ -24,7 +23,7 @@ export const GET: RequestHandler = async ({ params }) => {
 			});
 		}
 
-		const entry = await totpService.getTOTPEntry(id);
+		const entry = await totpService.getTotp(id);
 
 		if (!entry) {
 			return json({
@@ -36,13 +35,19 @@ export const GET: RequestHandler = async ({ params }) => {
 			});
 		}
 
-		const token = generate_token(entry.secret);
+		// Update the used_at field when the entry is accessed
+		await totpService.updateUsedAt([id]);
+
+		const tokenResult = totpService.generateToken(entry.secret);
 
 		return json({
 			success: true,
 			data: {
 				id: entry.id,
-				token: token
+				token: tokenResult.token,
+				expiresIn: tokenResult.expiresIn,
+				generatedAt: tokenResult.generatedAt,
+				createdAt: entry.createdAt
 			}
 		}, {
 			headers: corsHeaders
@@ -73,7 +78,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			});
 		}
 
-		const result = await totpService.deleteTOTPEntry(id);
+		const result = await totpService.deleteTotp(id);
 
 		if (result) {
 			return json({

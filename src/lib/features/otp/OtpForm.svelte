@@ -4,7 +4,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { Turnstile } from 'svelte-turnstile';
 	import { publicConfig } from '$lib/configs';
-	const { onEntryAdded }: { onEntryAdded: (entry: TOTPEntry) => Promise<void> } = $props();
+	import type { Totp } from '$lib/entities';
+	const { onEntryAdded }: { onEntryAdded: (entry: Totp) => Promise<void> } = $props();
 
 	let enrollment: EnrollmentResult = $state({
 		id: '',
@@ -197,51 +198,25 @@
 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
 	<h2 class="text-xl font-semibold mb-4">Add New TOTP Key</h2>
 	<form onsubmit={submitOTPEntry} class="space-y-4">
-		<div>
-			<label for="issuer" class="block text-sm font-medium text-gray-700 mb-1"
-				>Issuer (Optional)</label
-			>
-			<input
-				type="text"
-				id="issuer"
-				bind:value={enrollment.issuer}
-				oninput={() => createTOTPEntry()}
-				class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-				placeholder="e.g., Google, GitHub"
-			/>
-		</div>
-
-		<div>
-			<label for="label" class="block text-sm font-medium text-gray-700 mb-1"
-				>Label (Optional)</label
-			>
-			<input
-				type="text"
-				id="label"
-				bind:value={enrollment.label}
-				oninput={() => createTOTPEntry()}
-				class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-				placeholder="e.g., john@example.com"
-			/>
-		</div>
-
-		<div>
-			<label for="secret" class="block text-sm font-medium text-gray-700 mb-1">
-				Secret (Optional - Enter to generate QR code)
-			</label>
-			<div class="flex gap-2">
+		<div class="flex gap-2">
+			<div class="flex-1">
+				<label for="secret" class="block text-sm font-medium text-gray-700 mb-1">
+					Secret (Optional - Enter to generate QR code)
+				</label>
 				<input
 					type="text"
 					id="secret"
 					bind:value={enrollment.secret}
 					oninput={() => createTOTPEntry()}
-					class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 					placeholder="Enter TOTP secret or paste QR code URI"
 				/>
+			</div>
+			<div class="flex items-end">
 				<button
 					type="button"
 					onclick={() => genSecret()}
-					class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-[42px]"
 					title="Generate new secret"
 				>
 					↻
@@ -249,21 +224,7 @@
 			</div>
 		</div>
 
-		{#if enrollment.qrCodeDataUrl}
-			<div class="mt-4 p-4 border rounded-lg bg-gray-50">
-				<h3 class="text-lg font-medium mb-2">QR Code</h3>
-				<img
-					src={enrollment.qrCodeDataUrl}
-					alt="TOTP QR Code"
-					class="mx-auto w-48 h-48 object-contain"
-				/>
-				<p class="text-sm text-gray-600 mt-2 text-center">
-					Scan this QR code with your authenticator app
-				</p>
-			</div>
-		{/if}
-
-		<div class="border-t border-gray-200 pt-4">
+		<div>
 			<span class="block text-sm font-medium text-gray-700 mb-2"> Or upload a QR code image </span>
 			<input
 				type="file"
@@ -276,34 +237,74 @@
 					file:bg-blue-50 file:text-blue-700
 					hover:file:bg-blue-100"
 			/>
-			<p class="text-xs text-gray-500 mt-1">
-				Upload a QR code image to extract the secret (Note: Full implementation would require QR
-				decoding)
-			</p>
-			<p class="text-xs text-gray-500 mt-1">
-				Alternatively, you can paste (Ctrl+V or Cmd+V) a QR code image directly from your clipboard.
-			</p>
 		</div>
 
-		<!-- Cloudflare Turnstile Widget -->
-		<div class="my-4 flex justify-center">
-			<Turnstile
-				siteKey={publicConfig.turnstile.siteKey || ''}
-				on:callback={handleTurnstileSuccess}
-				bind:reset={resetTurnstile}
-			/>
-		</div>
+		{#if enrollment.secret}
+			<!-- Show additional fields only when secret has data -->
+			<div class="border-t border-gray-200 pt-4 mt-4 space-y-4">
+				<div>
+					<label for="issuer" class="block text-sm font-medium text-gray-700 mb-1"
+						>Issuer (Optional)</label
+					>
+					<input
+						type="text"
+						id="issuer"
+						bind:value={enrollment.issuer}
+						oninput={() => createTOTPEntry()}
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						placeholder="e.g., Google, GitHub"
+					/>
+				</div>
 
-		<button
-			type="submit"
-			disabled={submitting || !turnstileToken}
-			class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300 disabled:opacity-50"
-		>
-			{#if submitting}
-				Adding...
-			{:else}
-				Add TOTP Key
-			{/if}
-		</button>
+				<div>
+					<label for="label" class="block text-sm font-medium text-gray-700 mb-1"
+						>Label (Optional)</label
+					>
+					<input
+						type="text"
+						id="label"
+						bind:value={enrollment.label}
+						oninput={() => createTOTPEntry()}
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						placeholder="e.g., john@example.com"
+					/>
+				</div>
+
+				{#if enrollment.qrCodeDataUrl}
+					<div class="mt-4 p-4 border rounded-lg bg-gray-50">
+						<h3 class="text-lg font-medium mb-2">QR Code</h3>
+						<img
+							src={enrollment.qrCodeDataUrl}
+							alt="TOTP QR Code"
+							class="mx-auto w-48 h-48 object-contain"
+						/>
+						<p class="text-sm text-gray-600 mt-2 text-center">
+							Scan this QR code with your authenticator app
+						</p>
+					</div>
+				{/if}
+
+				<!-- Cloudflare Turnstile Widget -->
+				<div class="my-4 flex justify-center">
+					<Turnstile
+						siteKey={publicConfig.turnstile.siteKey || ''}
+						on:callback={handleTurnstileSuccess}
+						bind:reset={resetTurnstile}
+					/>
+				</div>
+
+				<button
+					type="submit"
+					disabled={submitting || !turnstileToken}
+					class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300 disabled:opacity-50"
+				>
+					{#if submitting}
+						Adding...
+					{:else}
+						Add TOTP Key
+					{/if}
+				</button>
+			</div>
+		{/if}
 	</form>
 </div>

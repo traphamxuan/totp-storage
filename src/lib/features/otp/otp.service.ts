@@ -1,4 +1,3 @@
-import type { Totp } from '$lib/entities';
 import init, { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64, decode_qr_code_base64 } from '@totp-store/totp-rs-web';
 
 let isInit = false
@@ -18,14 +17,14 @@ export function generateSecret(): string {
     return generate_secret();
 }
 
-export async function enrollTOTP(totp: Totp): Promise<EnrollmentResult> {
+export async function enrollTOTP(options: EnrollmentOptions): Promise<EnrollmentResult> {
     await once()
     // Use provided secret or generate a new one
-    const secret = totp.secret || generate_secret();
+    const secret = options.secret || generate_secret();
 
     // Set defaults for issuer and label
-    const issuer = totp.issuer || 'TOTP Store';
-    const label = totp.label || `Account ${generateId()}`;
+    const issuer = options.issuer || 'TOTP Store';
+    const label = options.label || `Account ${generateId()}`;
 
     // Generate QR code URL and data URL
     const qrCodeUrl = generate_totp_uri(secret, label, issuer);

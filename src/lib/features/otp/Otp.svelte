@@ -1,36 +1,35 @@
 <script module lang="ts">
-	let debounceTimer: ReturnType<typeof setTimeout> = 0;
+	let debounceTimer: NodeJS.Timeout | null = null;
 	let copiedEntries = new Set<string>();
 
 	export function trackCopiedEntry(id: string) {
 		copiedEntries.add(id);
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
-			debounceTimer = undefined;
+			debounceTimer = null;
 		}
 		debounceTimer = setTimeout(() => {
 			submitCopiedEntries();
 		}, 10000); // 10 seconds
 	}
 
-
 	// Submit copied entries to backend
 	async function submitCopiedEntries() {
 		if (copiedEntries.size === 0) return;
-		
+
 		try {
 			// Convert Set to array for submission
 			const entriesArray = Array.from(copiedEntries);
-			
+
 			// Call the API to update the used_at field
 			const success = await updateUsedAt(entriesArray);
-			
+
 			if (success) {
 				console.log('Successfully updated used_at field for entries:', entriesArray);
 			} else {
 				console.error('Failed to update used_at field for entries:', entriesArray);
 			}
-			
+
 			// Clear the set after submission
 			copiedEntries.clear();
 		} catch (error) {
@@ -41,21 +40,20 @@
 
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { deleteEntry as deleteEntryApi, syncEntry as syncEntryApi, updateUsedAt } from './api';
+	import { syncEntry as syncEntryApi, updateUsedAt } from './api';
 	import { generateToken } from './otp.service';
+	import type { Totp } from '$lib/entities';
 
 	const {
-		entry,
-		onDelete
+		entry
 	}: {
-		entry: TOTPEntry;
-		onDelete: (id: string) => void;
+		entry: Totp;
 	} = $props();
 
 	let token = $state('');
 	let expiresIn = $state(30);
-	let timer: ReturnType<typeof setInterval> = 0;
-	let tokenTimer: ReturnType<typeof setInterval> = 0;
+	let timer: NodeJS.Timeout | null = null;
+	let tokenTimer: NodeJS.Timeout | null = null;
 	let showMenu = $state(false);
 
 	onMount(() => {
@@ -116,11 +114,6 @@
 		}
 	}
 
-	async function deleteEntry() {
-		await deleteEntryApi(entry.id);
-		onDelete(entry.id);
-	}
-
 	async function syncEntry() {
 		try {
 			// Call the API to get a fresh token
@@ -133,6 +126,11 @@
 		} catch (error) {
 			console.error('Failed to sync entry:', error);
 		}
+	}
+
+	function openPublicLink() {
+		const url = `/api/public/totp/${entry.id}`;
+		window.open(url, '_blank');
 	}
 
 	function toggleMenu() {
@@ -215,17 +213,19 @@
 		<!-- Dropdown menu -->
 		{#if showMenu}
 			<div class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+				<a
+					href={`/api/public/totp/${entry.id}`}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+				>
+					Link
+				</a>
 				<button
 					onclick={syncEntry}
 					class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 				>
 					Sync
-				</button>
-				<button
-					onclick={deleteEntry}
-					class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-				>
-					Delete
 				</button>
 			</div>
 		{/if}

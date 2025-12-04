@@ -11,7 +11,6 @@
 
 	let entries: Totp[] = $state([]);
 	let total: number = $state(0);
-	let isAuthenticated = $state(false);
 
 	async function onEntryAdded(entry: Totp) {
 		entries = [entry, ...entries];
@@ -38,15 +37,9 @@
 		}
 	}
 
-	async function handleDelete(id: string) {
-		entries = entries.filter((entry) => entry.id !== id);
-		total = total - 1; // Decrement total when removing an entry
-	}
-
 	onMount(async () => {
 		await init();
 		await loadEntries();
-		isAuthenticated = !!ctx.user;
 	});
 </script>
 
@@ -71,5 +64,30 @@
 	<!-- Add New TOTP Form -->
 	<OtpForm {onEntryAdded} />
 
-	<OtpList bind:entries {total} onLoad={loadEntries} onDelete={handleDelete} />
+	<OtpList bind:entries {total} onLoad={loadEntries} />
+
+	<!-- Description section for SEO -->
+	<div class="bg-white rounded-lg shadow-md p-6 mt-8">
+		<div class="mb-8 text-black-700 dark:text-black-300">
+			<h3 class="text-xl font-semibold mb-2">Description</h3>
+			<p class="mb-4">
+				TOTP Storage is a secure solution for managing Time-based One-Time Password (TOTP) tokens
+				used in two-factor authentication (2FA) systems. Our platform enables automation testing
+				tools to access TOTP codes without disrupting the original MFA authentication flow.
+			</p>
+			<p class="mb-4">
+				With TOTP Storage, you can securely store OTP codes for multiple accounts and access them
+				from anywhere you have internet connectivity. Perfect for development teams that need to
+				test authentication flows without manually entering codes.
+			</p>
+			<h2 class="text-xl font-semibold mb-2">Key Features</h2>
+			<ul class="list-disc pl-5 mb-4">
+				<li>Secure cloud-based OTP management</li>
+				<li>Seamless integration with automation testing tools</li>
+				<li>No disruption to existing MFA authentication flows</li>
+				<li>Access TOTP tokens from any device with internet</li>
+				<li>Support for multiple account management</li>
+			</ul>
+		</div>
+	</div>
 </div>
