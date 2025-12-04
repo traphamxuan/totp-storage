@@ -4,9 +4,11 @@
 	import { listEntries } from '$lib/features/otp';
 	import OtpForm from '$lib/features/otp/OtpForm.svelte';
 	import OtpList from '$lib/features/otp/OtpList.svelte';
+	import { SignedIn, SignedOut, UserButton, SignInButton, useClerkContext } from 'svelte-clerk';
 
 	let entries: TOTPEntry[] = $state([]);
 	let total: number = $state(0);
+	let isAuthenticated = $state(false);
 
 	async function onEntryAdded(entry: TOTPEntry) {
 		entries = [entry, ...entries];
@@ -38,38 +40,44 @@
 		total = total - 1; // Decrement total when removing an entry
 	}
 
-	// Function to check if browser is Chrome/Chromium-based
-	function isChromeBrowser(): boolean {
-		return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-	}
+	// // Function to check if browser is Chrome/Chromium-based
+	// function isChromeBrowser(): boolean {
+	// 	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+	// }
 
-	// Function to trigger Chrome extension installation
-	function installExtension() {
-		// In a real implementation, you would need to host the extension in the Chrome Web Store
-		// For development/testing, users would load it manually as an unpacked extension
-		alert(
-			'To install the TOTP Store Chrome extension:\n\n1. Open Chrome and go to chrome://extensions\n2. Enable "Developer mode"\n3. Click "Load unpacked"\n4. Select the chrome-extension folder from the project directory\n\nNote: For production deployment, the extension would be available in the Chrome Web Store.'
-		);
-	}
+	// // Function to trigger Chrome extension installation
+	// function installExtension() {
+	// 	// In a real implementation, you would need to host the extension in the Chrome Web Store
+	// 	// For development/testing, users would load it manually as an unpacked extension
+	// 	alert(
+	// 		'To install the TOTP Store Chrome extension:\n\n1. Open Chrome and go to chrome://extensions\n2. Enable "Developer mode"\n3. Click "Load unpacked"\n4. Select the chrome-extension folder from the project directory\n\nNote: For production deployment, the extension would be available in the Chrome Web Store.'
+	// 	);
+	// }
 
 	onMount(async () => {
 		await init();
 		await loadEntries();
+		const ctx = useClerkContext();
+		isAuthenticated = !!ctx.user;
 	});
 </script>
 
 <div class="max-w-4xl mx-auto p-4 relative">
 	<div class="flex justify-between items-center mb-6">
 		<h1 class="text-3xl font-bold text-center flex-1">TOTP Storage</h1>
-		{#if isChromeBrowser()}
-			<button
-				onclick={installExtension}
-				class="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-300 text-sm"
-				title="Install Chrome Extension"
-			>
-				Login
-			</button>
-		{/if}
+		<div>
+			<SignedOut>
+				<div
+					class="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition duration-300 text-sm"
+					title="Install Chrome Extension"
+				>
+					<SignInButton />
+				</div>
+			</SignedOut>
+			<SignedIn>
+				<UserButton />
+			</SignedIn>
+		</div>
 	</div>
 
 	<!-- Add New TOTP Form -->

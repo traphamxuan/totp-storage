@@ -1,4 +1,5 @@
 import { 
+    PUBLIC_CLERK_PUBLISHABLE_KEY,
   PUBLIC_TURNSTILE_SITE_KEY
 } from '$env/static/public';
 
@@ -32,6 +33,10 @@ export interface PublicConfig {
   turnstile: {
     siteKey: string;
   };
+
+  clerk: {
+    publishableKey: string;
+  };
 }
 
 export const publicConfig: PublicConfig = {
@@ -41,5 +46,9 @@ export const publicConfig: PublicConfig = {
   apiBaseUrl: '/api/public/totp',
   turnstile: {
     siteKey: PUBLIC_TURNSTILE_SITE_KEY || ''
-  }
+  },
+  clerk: {
+    publishableKey: PUBLIC_CLERK_PUBLISHABLE_KEY || ''
+  },
+  
 };
