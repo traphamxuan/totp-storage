@@ -2,10 +2,12 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { publicConfig } from '$lib/configs';
 
 	injectSpeedInsights();
+	injectAnalytics();
 
 	let { children } = $props();
 </script>
