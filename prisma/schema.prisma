@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["private", "public"]
+}
+
+model private_totp {
+  id         String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  owner_id   String    @db.Uuid
+  secret     String
+  metadata   Json?     @default("{}")
+  used_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@unique([owner_id, secret], map: "totp_owner_id_secret_idx")
+  @@map("totp")
+  @@schema("private")
+}
+
+model public_totp {
+  id         String    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  secret     String    @unique
+  metadata   Json?     @default("{}")
+  used_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("totp")
+  @@schema("public")
+}

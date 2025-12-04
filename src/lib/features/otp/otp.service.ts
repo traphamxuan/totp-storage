@@ -1,4 +1,14 @@
-import { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64, decode_qr_code_base64 } from '@totp-store/totp-rs-web';
+import type { Totp } from '$lib/entities';
+import init, { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64, decode_qr_code_base64 } from '@totp-store/totp-rs-web';
+
+let isInit = false
+
+async function once() {
+    if (isInit) {
+        await init();
+        isInit = false
+    }
+}
 
 function generateId(): string {
     return Math.random().toString(36).substring(2, 15);
@@ -8,13 +18,14 @@ export function generateSecret(): string {
     return generate_secret();
 }
 
-export async function enrollTOTP(options?: EnrollmentOptions): Promise<EnrollmentResult> {
+export async function enrollTOTP(totp: Totp): Promise<EnrollmentResult> {
+    await once()
     // Use provided secret or generate a new one
-    const secret = options?.secret || generate_secret();
+    const secret = totp.secret || generate_secret();
 
     // Set defaults for issuer and label
-    const issuer = options?.issuer || 'TOTP Store';
-    const label = options?.label || `Account ${generateId()}`;
+    const issuer = totp.issuer || 'TOTP Store';
+    const label = totp.label || `Account ${generateId()}`;
 
     // Generate QR code URL and data URL
     const qrCodeUrl = generate_totp_uri(secret, label, issuer);
@@ -34,8 +45,9 @@ export async function enrollTOTP(options?: EnrollmentOptions): Promise<Enrollmen
     return enrollmentResult;
 }
 
-export function generateToken(secret: string): TokenGenerationResult {
-    const token = generate_token(secret);
+export async function generateToken(secret: string): Promise<TokenGenerationResult> {
+    await once()
+    const token = await generate_token(secret);
     const expiresIn = 30 - (Math.floor(Date.now() / 1000) % 30); // TOTP tokens expire every 30 seconds
 
     return {
@@ -49,9 +61,10 @@ export function getTimeRemaining(): number {
     return 30 - (Math.floor(Date.now() / 1000) % 30);
 }
 
-export function decodeQRCodeFromBase64(imageData: string): string {
+export async function decodeQRCodeFromBase64(imageData: string): Promise<string> {
+    await once()
     try {
-        return decode_qr_code_base64(imageData);
+        return await decode_qr_code_base64(imageData);
     } catch (error) {
         throw new Error(`Failed to decode QR code: ${error}`);
     }

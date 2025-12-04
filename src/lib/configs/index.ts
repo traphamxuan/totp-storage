@@ -1,5 +1,5 @@
-import { 
-    PUBLIC_CLERK_PUBLISHABLE_KEY,
+import {
+  PUBLIC_CLERK_PUBLISHABLE_KEY,
   PUBLIC_TURNSTILE_SITE_KEY
 } from '$env/static/public';
 
@@ -11,22 +11,22 @@ export interface PublicConfig {
    * Application name displayed in the UI
    */
   appName: string;
-  
+
   /**
    * Default TOTP issuer name
    */
   defaultIssuer: string;
-  
+
   /**
    * Application version
    */
   version: string;
-  
+
   /**
    * API base URL for public endpoints
    */
   apiBaseUrl: string;
-  
+
   /**
    * Turnstile configuration
    */
@@ -50,5 +50,4 @@ export const publicConfig: PublicConfig = {
   clerk: {
     publishableKey: PUBLIC_CLERK_PUBLISHABLE_KEY || ''
   },
-  
 };

@@ -58,7 +58,7 @@
 	}
 
 	async function genSecret() {
-		enrollment.secret = generateSecret();
+		enrollment.secret = await generateSecret();
 		return createTOTPEntry();
 	}
 
@@ -105,7 +105,7 @@
 			try {
 				const imageData = e.target?.result as string;
 				// Decode the QR code to extract the secret
-				const decodedContent = decodeQRCodeFromBase64(imageData);
+				const decodedContent = await decodeQRCodeFromBase64(imageData);
 
 				// Check if it's a TOTP URI
 				if (decodedContent.startsWith('otpauth://totp/')) {
@@ -153,7 +153,7 @@
 					try {
 						const imageData = e.target?.result as string;
 						// Decode the QR code to extract the secret
-						const decodedContent = decodeQRCodeFromBase64(imageData);
+						const decodedContent = await decodeQRCodeFromBase64(imageData);
 
 						// Check if it's a TOTP URI
 						if (decodedContent.startsWith('otpauth://totp/')) {

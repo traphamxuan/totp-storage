@@ -1,21 +1,22 @@
 import { privateConfig } from '$lib/server/configs';
 import { totpService } from '$lib/server';
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
+import axios from 'axios';
 
 // Add Turnstile validation function
 async function validateTurnstileToken(token: string, ip: string): Promise<boolean> {
 	try {
-		const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: `secret=${encodeURIComponent(privateConfig.turnstile.secretKey)}&response=${encodeURIComponent(token)}&remoteip=${encodeURIComponent(ip)}`
-		});
+		const response = await axios.post(
+			'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+			`secret=${encodeURIComponent(privateConfig.turnstile.secretKey)}&response=${encodeURIComponent(token)}&remoteip=${encodeURIComponent(ip)}`,
+			{
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+			});
 
-		const data = await response.json();
-		return data.success === true;
+		return response.data.success === true;
 	} catch (error) {
 		console.error('Error validating Turnstile token:', error);
 		return false;
@@ -86,7 +87,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		}
 
 		// Add the entry (type: 'public' | 'challenge')
-		const result = await totpService.addTOTPEntry({ ...payload, type: 'public' });
+		const result = await totpService.addTotp({ ...payload, type: 'public' });
 		return json({
 			success: true,
 			data: result

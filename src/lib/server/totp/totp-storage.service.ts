@@ -1,8 +1,9 @@
 import { generate_token } from './pkg'
 import { TOTPRepository } from './totp.repository';
-import { supabase } from '../supabase';
+import { prisma } from '../providers/prisma';
+import { Totp } from '$lib/entities';
 
-// export interface TOTPEntry {
+// export interface Totp {
 //     id: string;
 //     secret: string;
 //     issuer: string;
@@ -26,9 +27,9 @@ export interface ListOptions {
 }
 
 export class TotpService {
-    constructor(private totpRepo: TOTPRepository) {}
+    constructor(private totpRepo: TOTPRepository) { }
 
-    async addTOTPEntry(data: Omit<TOTPEntry, 'id' | 'createdAt'>): Promise<TOTPEntry> {
+    async addTotp(data: Omit<Totp, 'id' | 'createdAt'>): Promise<Totp> {
         const result = await this.totpRepo.create({
             secret: data.secret,
             metadata: {
@@ -37,29 +38,13 @@ export class TotpService {
                 type: 'public'
             }
         });
-        return {
-            id: result.id,
-            secret: result.secret,
-            issuer: result.metadata?.issuer || 'TOTP Store',
-            label: result.metadata?.label || `Account ${result.id}`,
-            type: result.metadata?.type || 'public',
-            challengeKey: result.metadata?.challengeKey,
-            createdAt: result.created_at || ''
-        } satisfies TOTPEntry;
+        return new Totp(result);
     }
 
-    async getTOTPEntry(id: string): Promise<TOTPEntry | null> {
+    async getTotp(id: string): Promise<Totp | null> {
         try {
             const result = await this.totpRepo.getOne(id);
-            return {
-                id: result.id,
-                secret: result.secret,
-                issuer: result.metadata?.issuer || 'TOTP Store',
-                label: result.metadata?.label || `Account ${result.id}`,
-                type: result.metadata?.type || 'public',
-                challengeKey: result.metadata?.challengeKey,
-                createdAt: result.created_at || ''
-            };
+            return new Totp(result);
         } catch (error) {
             console.error('Error getting TOTP entry:', error);
             return null;
@@ -70,23 +55,16 @@ export class TotpService {
         page: number = 1,
         limit: number = 10,
         options?: ListOptions
-    ): Promise<{ entries: TOTPEntry[]; total: number }> {
+    ): Promise<{ entries: Totp[]; total: number }> {
         // Note: Filtering and sorting by issuer/label would require storing these in the database
         // For now, we'll just implement pagination
         const result = await this.totpRepo.getMany(page, limit, options);
 
-        const entries: TOTPEntry[] = result.data.map(item => ({
-            id: item.id,
-            secret: item.secret,
-            issuer: item.metadata?.issuer || 'TOTP Store',
-            label: item.metadata?.label || `Account ${item.id}`,
-            type: item.metadata?.type || 'public',
-            createdAt: item.created_at || ''
-        }));
+        const entries: Totp[] = result.data.map(item => new Totp(item));
         return { entries, total: result.total };
     }
 
-    async deleteTOTPEntry(id: string): Promise<boolean> {
+    async deleteTotp(id: string): Promise<boolean> {
         return await this.totpRepo.delete(id);
     }
 
@@ -118,4 +96,4 @@ export class TotpService {
 
 // Export a singleton instance for backward compatibility
 // Note: This would need to be initialized with a repository instance
-export const totpService = new TotpService(new TOTPRepository(supabase));
+export const totpService = new TotpService(new TOTPRepository(prisma));

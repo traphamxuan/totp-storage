@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Otp from './Otp.svelte';
+	import type { Totp } from '$lib/entities';
 
 	// Props
 	let {
@@ -9,7 +9,7 @@
 		onLoad,
 		onDelete = (id: string) => {}
 	}: {
-		entries: TOTPEntry[];
+		entries: Totp[];
 		total: number;
 		onLoad: (
 			page: number,
@@ -72,7 +72,7 @@
 		if (searchDebounceTimer) {
 			clearTimeout(searchDebounceTimer);
 		}
-		
+
 		// Set new timeout
 		searchDebounceTimer = setTimeout(() => {
 			// Reset to first page when search changes

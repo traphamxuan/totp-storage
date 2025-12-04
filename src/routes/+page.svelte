@@ -5,16 +5,19 @@
 	import OtpForm from '$lib/features/otp/OtpForm.svelte';
 	import OtpList from '$lib/features/otp/OtpList.svelte';
 	import { SignedIn, SignedOut, UserButton, SignInButton, useClerkContext } from 'svelte-clerk';
+	import type { Totp } from '$lib/entities';
 
-	let entries: TOTPEntry[] = $state([]);
+	const ctx = useClerkContext();
+
+	let entries: Totp[] = $state([]);
 	let total: number = $state(0);
 	let isAuthenticated = $state(false);
 
-	async function onEntryAdded(entry: TOTPEntry) {
+	async function onEntryAdded(entry: Totp) {
 		entries = [entry, ...entries];
 		total = total + 1; // Increment total when adding an entry
 	}
-	// hXxinrTmrcUhJvrp
+
 	async function loadEntries(
 		page: number = 1,
 		limit: number = 10,
@@ -24,12 +27,12 @@
 	) {
 		try {
 			// Fetch entries with secrets for offline use
-		const result = await listEntries(page, limit, search, sortBy, sortOrder);
-		if (result) {
-			// If this is the first page, replace entries, otherwise append
-			entries = result.entries;
-			total = result.total;
-		}
+			const result = await listEntries(page, limit, search, sortBy, sortOrder);
+			if (result) {
+				// If this is the first page, replace entries, otherwise append
+				entries = result.entries;
+				total = result.total;
+			}
 		} catch (error) {
 			console.error('Error loading entries:', error);
 		}
@@ -40,24 +43,9 @@
 		total = total - 1; // Decrement total when removing an entry
 	}
 
-	// // Function to check if browser is Chrome/Chromium-based
-	// function isChromeBrowser(): boolean {
-	// 	return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-	// }
-
-	// // Function to trigger Chrome extension installation
-	// function installExtension() {
-	// 	// In a real implementation, you would need to host the extension in the Chrome Web Store
-	// 	// For development/testing, users would load it manually as an unpacked extension
-	// 	alert(
-	// 		'To install the TOTP Store Chrome extension:\n\n1. Open Chrome and go to chrome://extensions\n2. Enable "Developer mode"\n3. Click "Load unpacked"\n4. Select the chrome-extension folder from the project directory\n\nNote: For production deployment, the extension would be available in the Chrome Web Store.'
-	// 	);
-	// }
-
 	onMount(async () => {
 		await init();
 		await loadEntries();
-		const ctx = useClerkContext();
 		isAuthenticated = !!ctx.user;
 	});
 </script>

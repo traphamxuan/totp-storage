@@ -1,18 +1,24 @@
-import type { RequestHandler } from './$types';
 import { totpService } from '$lib/server';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {
-    try {
-        // Generate a sample OTP using the WASM implementation
-        const secret = 'JBSWY3DPEHPK3PXP'; // Sample secret for testing
-        const result = totpService.generateToken(secret);
-        return new Response(JSON.stringify(result), {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    } catch (error) {
-        console.error('Error generating OTP:', error);
-        return new Response('Error generating OTP', { status: 500 });
-    }
+	try {
+		// Load the first 100 TOTP entries
+		const result = await totpService.listTOTPEntries(1, 100);
+
+		return json({
+			entries: result.entries,
+			total: result.total
+		});
+	} catch (error) {
+		console.error('Error loading TOTP entries:', error);
+		return json(
+			{
+				entries: [],
+				total: 0
+			},
+			{ status: 500 }
+		);
+	}
 };
