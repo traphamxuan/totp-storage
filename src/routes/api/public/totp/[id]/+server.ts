@@ -1,7 +1,7 @@
 import { totpService } from '$lib/server';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
-import { generate_token } from '@totp-store/totp-rs-bundler'
+import { generate_token } from '$lib/server';
 
 // Add CORS headers
 const corsHeaders = {
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ params }) => {
 			});
 		}
 
-		const entry = totpService.getTOTPEntry(id);
+		const entry = await totpService.getTOTPEntry(id);
 
 		if (!entry) {
 			return json({
@@ -73,7 +73,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			});
 		}
 
-		const result = totpService.deleteTOTPEntry(id);
+		const result = await totpService.deleteTOTPEntry(id);
 
 		if (result) {
 			return json({

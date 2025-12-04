@@ -25,7 +25,7 @@
 
 	// State
 	let limit = $state(10);
-	let contents = $derived(entries.slice(0, limit));
+	let contents = $derived(entries.slice(0, limit) || []);
 	let searchQuery = $state('');
 
 	// Sorting state

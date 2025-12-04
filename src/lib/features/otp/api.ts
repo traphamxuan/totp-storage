@@ -1,11 +1,16 @@
-import type { TOTPEntry } from '$lib/server';
 import axios from 'axios';
 
 const BASE_URL = '/api/public/totp';
 
-export async function addEntry(payload: EnrollmentResult): Promise<TOTPEntry | null> {
+export async function addEntry(payload: EnrollmentResult, turnstileToken?: string): Promise<TOTPEntry | null> {
     try {
-        const response = await axios.post<ApiResponse<TOTPEntry>>(BASE_URL, payload);
+        const config = turnstileToken ? {
+            headers: {
+                'x-turnstile-token': turnstileToken
+            }
+        } : {};
+
+        const response = await axios.post<ApiResponse<TOTPEntry>>(BASE_URL, payload, config);
 
         if (response.data.success && response.data.data) {
             return response.data.data;
@@ -20,7 +25,7 @@ export async function addEntry(payload: EnrollmentResult): Promise<TOTPEntry | n
 }
 
 export async function listEntries(
-    page: number = 1, 
+    page: number = 1,
     limit: number = 10,
     search?: string,
     sortBy?: string,
@@ -31,15 +36,15 @@ export async function listEntries(
         const params = new URLSearchParams();
         params.append('page', page.toString());
         params.append('limit', limit.toString());
-        
+
         if (search) {
             params.append('search', search);
         }
-        
+
         if (sortBy) {
             params.append('sortBy', sortBy);
         }
-        
+
         if (sortOrder) {
             params.append('sortOrder', sortOrder);
         }

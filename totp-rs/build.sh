@@ -2,6 +2,15 @@
 
 set -e
 
+if which wasm-pack >/dev/null; then
+  echo "wasm-pack is installed."
+else
+  echo "Install rustup"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -y
+  echo "wasm-pack is not installed. Installing wasm-pack..."
+  curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+fi
+
 # Build for WebAssembly (browser)
 build_web() {
   echo "Building for WebAssembly (browser)..."

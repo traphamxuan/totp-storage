@@ -42,8 +42,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'wasm-test': '/wasm-test/pkg',
-			'@totp-store/totp-rs-bundler': '/totp-rs/build/totp-rs-bundler/pkg',
-			'@totp-store/totp-rs-web': '/totp-rs/build/totp-rs-web/pkg'
+			'@totp-store/totp-rs-web': '/static/pkg'
 		}
 	},
 	server: {

@@ -2,6 +2,8 @@
 	import { addEntry } from './api';
 	import { enrollTOTP, decodeQRCodeFromBase64, generateToken, generateSecret } from './otp.service';
 	import { onMount, onDestroy } from 'svelte';
+	import { Turnstile } from 'svelte-turnstile';
+	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
 	const { onEntryAdded }: { onEntryAdded: (entry: TOTPEntry) => Promise<void> } = $props();
 
@@ -16,6 +18,8 @@
 	});
 	let generatingQrCode: ReturnType<typeof setTimeout> | null = null;
 	let submitting: boolean = $state(false);
+	let turnstileToken: string = $state('');
+	let resetTurnstile = $state<() => void>();
 
 	onMount(() => {
 		// Add event listener for paste events only in browser environment
@@ -29,6 +33,7 @@
 			window.removeEventListener('paste', handleClipboardPaste);
 		}
 	});
+
 	async function createTOTPEntry() {
 		if (generatingQrCode) clearTimeout(generatingQrCode);
 
@@ -59,10 +64,17 @@
 	}
 
 	async function submitOTPEntry() {
+		// Verify Turnstile token before submission
+		if (!turnstileToken) {
+			alert('Please complete the security verification');
+			return;
+		}
+
 		submitting = true;
 		try {
 			const enroll = await enrollTOTP({ ...enrollment });
-			const entry = await addEntry(enroll);
+			// Pass the Turnstile token to the API call
+			const entry = await addEntry(enroll, turnstileToken);
 			if (entry) {
 				await onEntryAdded(entry);
 				enrollment.secret = '';
@@ -70,11 +82,15 @@
 				enrollment.qrCodeUrl = '';
 				enrollment.issuer = '';
 				enrollment.label = '';
+
+				// Reset Turnstile token after successful submission
+				turnstileToken = '';
 			}
 		} catch (error) {
 			console.error('Error submitting OTP entry:', error);
 		} finally {
 			submitting = false;
+			resetTurnstile && resetTurnstile();
 		}
 	}
 
@@ -171,6 +187,12 @@
 			}
 		}
 	}
+
+	function handleTurnstileSuccess(
+		event: CustomEvent<{ token: string; preClearanceObtained: boolean }>
+	) {
+		turnstileToken = event.detail.token;
+	}
 </script>
 
 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -263,9 +285,19 @@
 				Alternatively, you can paste (Ctrl+V or Cmd+V) a QR code image directly from your clipboard.
 			</p>
 		</div>
+
+		<!-- Cloudflare Turnstile Widget -->
+		<div class="my-4 flex justify-center">
+			<Turnstile
+				siteKey={PUBLIC_TURNSTILE_SITE_KEY || ''}
+				on:callback={handleTurnstileSuccess}
+				bind:reset={resetTurnstile}
+			/>
+		</div>
+
 		<button
 			type="submit"
-			disabled={submitting}
+			disabled={submitting || !turnstileToken}
 			class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300 disabled:opacity-50"
 		>
 			{#if submitting}

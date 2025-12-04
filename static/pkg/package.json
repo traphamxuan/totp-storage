@@ -1,0 +1,19 @@
+{
+  "name": "totp-rs",
+  "type": "module",
+  "collaborators": [
+    "xuantra"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "totp-rs-web_bg.wasm",
+    "totp-rs-web.js",
+    "totp-rs-web.d.ts"
+  ],
+  "main": "totp-rs-web.js",
+  "types": "totp-rs-web.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "description": "TOTP implementation in Rust for web"
+}

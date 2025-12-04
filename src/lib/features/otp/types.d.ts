@@ -25,6 +25,8 @@ interface TOTPEntry {
     issuer: string;
     label: string;
     secret: string;
+    type: 'public' | 'challenge';
+    challengeKey?: string;
     createdAt: string;
 }
 

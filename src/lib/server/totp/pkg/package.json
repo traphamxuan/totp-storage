@@ -1,0 +1,21 @@
+{
+  "name": "totp-rs",
+  "type": "module",
+  "collaborators": [
+    "xuantra"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "totp-rs-bundler_bg.wasm",
+    "totp-rs-bundler.js",
+    "totp-rs-bundler_bg.js",
+    "totp-rs-bundler.d.ts"
+  ],
+  "main": "totp-rs-bundler.js",
+  "types": "totp-rs-bundler.d.ts",
+  "sideEffects": [
+    "./totp-rs-bundler.js",
+    "./snippets/*"
+  ],
+  "description": "TOTP implementation in Rust for bundler"
+}
