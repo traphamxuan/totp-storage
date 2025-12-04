@@ -3,8 +3,7 @@
 	import { enrollTOTP, decodeQRCodeFromBase64, generateToken, generateSecret } from './otp.service';
 	import { onMount, onDestroy } from 'svelte';
 	import { Turnstile } from 'svelte-turnstile';
-	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
-
+	import { publicConfig } from '$lib/configs';
 	const { onEntryAdded }: { onEntryAdded: (entry: TOTPEntry) => Promise<void> } = $props();
 
 	let enrollment: EnrollmentResult = $state({
@@ -289,7 +288,7 @@
 		<!-- Cloudflare Turnstile Widget -->
 		<div class="my-4 flex justify-center">
 			<Turnstile
-				siteKey={PUBLIC_TURNSTILE_SITE_KEY || ''}
+				siteKey={publicConfig.turnstile.siteKey || ''}
 				on:callback={handleTurnstileSuccess}
 				bind:reset={resetTurnstile}
 			/>

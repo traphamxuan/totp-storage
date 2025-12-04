@@ -1,4 +1,4 @@
-import { PRIVATE_TURNSTILE_SECRET_KEY } from '$env/static/private';
+import { privateConfig } from '$lib/server/configs';
 import { totpService } from '$lib/server';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
@@ -11,7 +11,7 @@ async function validateTurnstileToken(token: string, ip: string): Promise<boolea
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
-			body: `secret=${encodeURIComponent(PRIVATE_TURNSTILE_SECRET_KEY)}&response=${encodeURIComponent(token)}&remoteip=${encodeURIComponent(ip)}`
+			body: `secret=${encodeURIComponent(privateConfig.turnstile.secretKey)}&response=${encodeURIComponent(token)}&remoteip=${encodeURIComponent(ip)}`
 		});
 
 		const data = await response.json();
