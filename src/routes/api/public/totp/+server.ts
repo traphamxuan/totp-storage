@@ -15,7 +15,6 @@ async function validateTurnstileToken(token: string, ip: string): Promise<boolea
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 			});
-
 		return response.data.success === true;
 	} catch (error) {
 		console.error('Error validating Turnstile token:', error);
@@ -92,8 +91,20 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			success: true,
 			data: result
 		});
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error(error);
+
+		// Handle specific error messages
+		if (error instanceof Error) {
+			// Check if it's a duplicate secret error
+			if (error.message === 'A TOTP entry with this secret already exists') {
+				return json({
+					success: false,
+					error: 'This TOTP secret already exists in the database'
+				}, { status: 409 }); // Conflict status code
+			}
+		}
+
 		return json({
 			success: false,
 			error: 'Failed to add TOTP entry'

@@ -14,7 +14,7 @@ fi
 # Build for WebAssembly (browser)
 build_web() {
   echo "Building for WebAssembly (browser)..."
-  wasm-pack build --target web --out-name totp-rs-web --out-dir build/totp-rs-web/pkg --release
+  wasm-pack build --target web --out-name totp-rs-web --out-dir ../wasm/totp-rs-web/pkg --release
   # Customize the package.json for web
   node normalize.js web
   echo "WebAssembly build completed successfully!"
@@ -23,7 +23,7 @@ build_web() {
 # Build for Node.js
 build_node() {
   echo "Building for Node.js..."
-  wasm-pack build --target nodejs --out-name totp-rs-node --out-dir build/totp-rs-node/pkg --release
+  wasm-pack build --target nodejs --out-name totp-rs-node --out-dir ../wasm/totp-rs-node/pkg --release
   # Customize the package.json for node
   node normalize.js node
   echo "Node.js build completed successfully!"
@@ -31,7 +31,7 @@ build_node() {
 
 build_bundler() {
   echo "Building for bundlers..."
-  wasm-pack build --target bundler --out-name totp-rs-bundler --out-dir build/totp-rs-bundler/pkg --release
+  wasm-pack build --target bundler --out-name totp-rs-bundler --out-dir ../wasm/totp-rs-bundler/pkg --release
   # Customize the package.json for bundlers
   node normalize.js bundler
   echo "Bundler build completed successfully!"

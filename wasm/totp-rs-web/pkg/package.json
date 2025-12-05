@@ -14,6 +14,5 @@
   "types": "totp-rs-web.d.ts",
   "sideEffects": [
     "./snippets/*"
-  ],
-  "description": "TOTP implementation in Rust for web"
+  ]
 }

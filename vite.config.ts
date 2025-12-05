@@ -3,14 +3,16 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
-import wasm from 'vite-plugin-wasm';
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
 		devtoolsJson(),
-		wasm()
+		wasm(),
+		topLevelAwait()
 	],
 	test: {
 		expect: { requireAssertions: true },
@@ -24,7 +26,8 @@ export default defineConfig({
 						provider: playwright(),
 						instances: [{ browser: 'chromium', headless: true }]
 					},
-					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					include: [
+						'src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**']
 				}
 			},
@@ -33,7 +36,10 @@ export default defineConfig({
 				test: {
 					name: 'server',
 					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
+					include: [
+						'src/**/*.{test,spec}.{js,ts}',
+						'node_modules/@totp-store/totp-rs-bundler/*.{js,ts,wasm}'
+					],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}
 			}
@@ -41,13 +47,13 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			'wasm-test': '/wasm-test/pkg',
-			'@totp-store/totp-rs-web': '/static/pkg'
+			'@totp-store/totp-rs-web': '/wasm/totp-rs-web/pkg',
+			'@totp-store/totp-rs-bundler': '/wasm/totp-rs-bundler/pkg'
 		}
 	},
 	server: {
 		fs: {
-			allow: ['.', '../wasm-test/pkg']
+			allow: ['./wasm/totp-rs-web/pkg']
 		}
 	}
 });

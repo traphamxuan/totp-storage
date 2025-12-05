@@ -16,6 +16,5 @@
   "sideEffects": [
     "./totp-rs-bundler.js",
     "./snippets/*"
-  ],
-  "description": "TOTP implementation in Rust for bundler"
+  ]
 }

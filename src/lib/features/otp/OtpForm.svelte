@@ -90,6 +90,7 @@
 			console.error('Error submitting OTP entry:', error);
 		} finally {
 			submitting = false;
+			turnstileToken = '';
 			resetTurnstile && resetTurnstile();
 		}
 	}

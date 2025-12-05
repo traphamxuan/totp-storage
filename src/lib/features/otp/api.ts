@@ -1,8 +1,21 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { Totp } from '$lib/entities';
+import { toast } from '@zerodevx/svelte-toast';
 
 const BASE_URL = '/api/public/totp';
 
-export async function addEntry(payload: EnrollmentResult, turnstileToken?: string): Promise<TOTPEntry | null> {
+interface ApiResponse<T> {
+    success: boolean;
+    data?: T;
+    error?: string;
+}
+
+interface ListTOTPResponse {
+    entries: Totp[];
+    total: number;
+}
+
+export async function addEntry(payload: EnrollmentResult, turnstileToken?: string): Promise<Totp | null> {
     try {
         const config = turnstileToken ? {
             headers: {
@@ -10,18 +23,21 @@ export async function addEntry(payload: EnrollmentResult, turnstileToken?: strin
             }
         } : {};
 
-        const response = await axios.post<ApiResponse<TOTPEntry>>(BASE_URL, payload, config);
+        const response = await axios.post<ApiResponse<Totp>>(BASE_URL, payload, config);
 
         if (response.data.success && response.data.data) {
+            // Convert TOTPEntry to Totp object
             return response.data.data;
         }
 
-        console.error('Failed to add TOTP entry:', response.data.error);
-        return null;
-    } catch (error) {
-        console.error('Error adding TOTP entry:', error);
-        return null;
+        // Show error toast for API errors
+        if (response.data.error) {
+            reportError('Failed to save TOTP entry')
+        }
+    } catch (error: unknown) {
+        reportError(error as AxiosError);
     }
+    return null;
 }
 
 export async function listEntries(
@@ -30,7 +46,7 @@ export async function listEntries(
     search?: string,
     sortBy?: string,
     sortOrder?: 'asc' | 'desc'
-): Promise<ListTOTPResponse | null> {
+): Promise<ListTOTPResponse> {
     try {
         // Build query parameters
         const params = new URLSearchParams();
@@ -56,13 +72,13 @@ export async function listEntries(
         if (response.data.success && response.data.data) {
             return response.data.data;
         }
-
-        console.error('Failed to list TOTP entries with secrets:', response.data.error);
-        return null;
-    } catch (error) {
-        console.error('Error listing TOTP entries with secrets:', error);
-        return null;
+        if (response.data.error) {
+            console.warn(response.data.error);
+        }
+    } catch (err) {
+        reportError(err as AxiosError);
     }
+    return { entries: [], total: 0 };
 }
 
 export async function syncEntry(id: string): Promise<{ token: string } | null> {
@@ -73,12 +89,14 @@ export async function syncEntry(id: string): Promise<{ token: string } | null> {
             return response.data.data;
         }
 
-        console.error('Failed to sync TOTP entry:', response.data.error);
-        return null;
+        if (response.data.error) {
+            reportError(response.data.error)
+        }
     } catch (error) {
-        console.error('Error syncing TOTP entry:', error);
-        return null;
+        reportError(error as AxiosError);
     }
+    return null;
+
 }
 
 export async function deleteEntry(id: string): Promise<boolean> {
@@ -89,12 +107,13 @@ export async function deleteEntry(id: string): Promise<boolean> {
             return true;
         }
 
-        console.error('Failed to delete TOTP entry:', response.data.error);
-        return false;
+        if (response.data.error) {
+            reportError(response.data.error)
+        }
     } catch (error) {
-        console.error('Error deleting TOTP entry:', error);
-        return false;
+        reportError(error as AxiosError);
     }
+    return false
 }
 
 // Add function to update used_at field for entries
@@ -105,11 +124,32 @@ export async function updateUsedAt(ids: string[]): Promise<boolean> {
         if (response.data.success) {
             return true;
         }
-
-        console.error('Failed to update used_at field:', response.data.error);
-        return false;
+        if (response.data.error) {
+            reportError(response.data.error)
+        }
     } catch (error) {
-        console.error('Error updating used_at field:', error);
-        return false;
+        reportError(error as AxiosError);
     }
+    return false;
+}
+
+function reportError(error: string | AxiosError) {
+    let msg: string;
+    if (error instanceof AxiosError) {
+        if (error.status === 409) {
+            msg = 'TOTP entry already exists';
+        } else {
+            msg = error.message;
+        }
+    } else {
+        msg = error;
+    }
+    toast.push(msg, {
+        duration: 5000,
+        theme: {
+            '--toastColor': 'mintcream',
+            '--toastBackground': 'rgba(201, 24, 24, 0.9)',
+            '--toastBarBackground': 'rgba(116, 24, 24, 0.9)'
+        }
+    })
 }

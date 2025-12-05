@@ -1,4 +1,10 @@
-import init, { generate_secret, generate_token, generate_totp_uri, generate_qr_code_base64, decode_qr_code_base64 } from '@totp-store/totp-rs-web';
+import init, {
+    generate_secret,
+    generate_token,
+    generate_totp_uri,
+    generate_qr_code_base64,
+    decode_qr_code_base64
+} from '@totp-store/totp-rs-web';
 
 let isInit = false
 

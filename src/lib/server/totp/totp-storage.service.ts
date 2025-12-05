@@ -1,4 +1,4 @@
-import { generate_token } from './pkg'
+import { generate_token } from '@totp-store/totp-rs-bundler'
 import { TOTPRepository } from './totp.repository';
 import { prisma } from '../providers/prisma';
 import { Totp } from '$lib/entities';

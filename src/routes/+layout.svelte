@@ -5,6 +5,7 @@
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { publicConfig } from '$lib/configs';
+	import { SvelteToast } from '@zerodevx/svelte-toast';
 
 	injectSpeedInsights();
 	injectAnalytics();
@@ -36,6 +37,8 @@
 		content="Manage TOTP codes for automation testing without disrupting authentication flows. Secure cloud-based OTP storage."
 	/>
 </svelte:head>
+
+<SvelteToast />
 
 <ClerkProvider publishableKey={publicConfig.clerk.publishableKey}>
 	{@render children()}

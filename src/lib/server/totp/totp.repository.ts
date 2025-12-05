@@ -7,12 +7,21 @@ export class TOTPRepository {
     }
 
     async create(totp: public_totpCreateInput): Promise<public_totp> {
-        return this.prisma.public_totp.create({
-            data: {
-                secret: totp.secret,
-                metadata: totp.metadata,
+        try {
+            return await this.prisma.public_totp.create({
+                data: {
+                    secret: totp.secret,
+                    metadata: totp.metadata,
+                }
+            });
+        } catch (error: unknown) {
+            // Handle unique constraint violation for secret field
+            // We need to check the error code since we can't import Prisma types directly
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+                throw new Error('A TOTP entry with this secret already exists');
             }
-        });
+            throw error;
+        }
     }
 
     async getMany(
