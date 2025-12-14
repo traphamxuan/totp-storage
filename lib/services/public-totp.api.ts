@@ -121,6 +121,31 @@ export class APIPublicTotp implements TotpInterface {
         }
     }
 
+    // Add function to register TOTP entry with external service
+    async register(id: string, secret: string): Promise<boolean> {
+        try {
+            const response = await axios.post<ApiResponse<null>>('https://totp-token.xarest.com/register', {
+                id,
+                secret
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data.success) {
+                return true;
+            }
+
+            if (response.data.error) {
+                this.reportError(response.data.error);
+            }
+        } catch (error) {
+            this.reportError(error as AxiosError);
+        }
+        return false;
+    }
+
     private reportError(error: string | AxiosError) {
         let msg: string;
         if (error instanceof AxiosError) {

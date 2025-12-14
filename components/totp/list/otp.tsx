@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { generateToken } from "@/lib/services/otp.service";
 import { Totp } from "@/lib/entities";
+import { APIPublicTotp } from "@/lib/services/public-totp.api";
 
 interface OtpProps {
     entry: Totp;
@@ -15,6 +16,7 @@ export function Otp({ entry }: OtpProps) {
     const tokenTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const api = new APIPublicTotp();
 
     // Generate initial token and start timers
     useEffect(() => {
@@ -98,6 +100,19 @@ export function Otp({ entry }: OtpProps) {
         }
     };
 
+    const registerAndOpenLink = async () => {
+        try {
+            // Register the TOTP entry with the external service
+            const success = await api.register(entry.id, entry.secret);
+            if (success) {
+                // Open new tab to the TOTP URL
+                window.open(`https://totp-token.xarest.com/totp/${entry.id}`, '_blank');
+            }
+        } catch (error) {
+            console.error("Failed to register entry:", error);
+        }
+    };
+
     const toggleMenu = () => {
         setShowMenu(!showMenu);
     };
@@ -156,14 +171,12 @@ export function Otp({ entry }: OtpProps) {
                 {/* Dropdown menu */}
                 {showMenu && (
                     <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
-                        <a
-                            href={`/api/totp/${entry.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <button
+                            onClick={registerAndOpenLink}
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                             Link
-                        </a>
+                        </button>
                         <button
                             onClick={syncEntry}
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
