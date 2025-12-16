@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { generateToken } from "@/lib/services/otp.service";
 import { Totp } from "@/lib/entities";
 import { APIPublicTotp } from "@/lib/services/public-totp.api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface OtpProps {
     entry: Totp;
@@ -14,8 +20,6 @@ export function Otp({ entry }: OtpProps) {
     const [expiresIn, setExpiresIn] = useState(30);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const tokenTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
     const api = new APIPublicTotp();
 
     // Generate initial token and start timers
@@ -29,23 +33,6 @@ export function Otp({ entry }: OtpProps) {
             if (tokenTimerRef.current) clearInterval(tokenTimerRef.current);
         };
     }, [entry]);
-
-    // Handle clicks outside menu to close it
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setShowMenu(false);
-            }
-        };
-
-        if (showMenu) {
-            document.addEventListener("click", handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener("click", handleClickOutside);
-        };
-    }, [showMenu]);
 
     const startTimers = () => {
         // Timer to update cooldown visualization
@@ -113,10 +100,6 @@ export function Otp({ entry }: OtpProps) {
         }
     };
 
-    const toggleMenu = () => {
-        setShowMenu(!showMenu);
-    };
-
     return (
         <div className="flex items-center justify-end space-x-2">
             {/* Show token and cooldown */}
@@ -152,40 +135,31 @@ export function Otp({ entry }: OtpProps) {
             </div>
 
             {/* Menu button */}
-            <div className="relative" ref={menuRef} id={`menu-${entry.id}`}>
-                <button
-                    onClick={toggleMenu}
-                    className="text-gray-600 hover:text-gray-900 ml-2 focus:outline-none"
-                    title="Menu"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        className="text-gray-600 hover:text-gray-900 ml-2 focus:outline-none"
+                        title="Menu"
                     >
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                    </svg>
-                </button>
-
-                {/* Dropdown menu */}
-                {showMenu && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
-                        <button
-                            onClick={registerAndOpenLink}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
                         >
-                            Link
-                        </button>
-                        <button
-                            onClick={syncEntry}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                            Sync
-                        </button>
-                    </div>
-                )}
-            </div>
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={registerAndOpenLink}>
+                        Link
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={syncEntry}>
+                        Sync
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     );
 }
